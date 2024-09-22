@@ -1,0 +1,228 @@
+---
+title: "UNIVERSIDADE ESTADUAL DA PARAÍBA CAMPUS l CENTRO DE CIÊNCIAS E TECNOLOGIA DEPARTAMENTO DE ESTATÍSTICA CURSO DE ESTATÍSTICA"
+institute: 
+        - "Ánalise Fatorial - MentalHealthSurvey de sáude mental"
+author: 
+     - "Fabiano Florentino dos Santos" 
+     - "Prof. Pedro 87"
+date: "CAMPINA GRANDE 19/09/24"
+encoding: "UTF-8"
+header-includes:
+    - \renewcommand{\rmdefault}{bch}
+    - \usepackage{tikz}
+    - \usepackage{multicolumn}
+    - \usetikzlibrary{positioning}
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightLines: true #realçar as linhas
+      countIncrementalSlides: false
+    css: ["chocolate-fonts" , "tamu"]
+editor_options: 
+  chunk_output_type: console
+---
+### O que é a analise fatorial?
+
+- É tecnica usada para exploração e redução da complexidade de conjuntos de dados multidimensionais, tendo como características revelar padrões subjantes e a estruturas dos dados(Pedro, 1987);
+
+- Útil quando há um grande número de variáveis correlacionadas, podemos extrair fatores latentes que explicam a variação observada nos dados, "Latente" refere-se a algo que está presente, mas não é imediatamente visível ou perceptível pode ser entendido como construtos subjacentes;
+
+- Assim como a análise de componentes principais temos a ideia de reduzir o banco, a problemática de quando temos um grande número de variáveis correlacionadas vamos obter fatores latentes para simplicar a interpretação e entendimento dos dados;
+
+
+obs) sempre vamos ter como objetivos Estudar a estrutura de dependência e reduzir a dimensonalidade
+---
+###O modelo fatorial que pode ser representada de maneira matrical da seguinte forma:
+
+                                  X − µ = ΛF + ε
+
+- X de ordem p x 1 e µ de ordem p x 1;
+- Λ de ordem p x q (Matriz de cargas fatoriais;
+- F de ordem q x 1 vetor de fatores;
+- ε vetor de fatores específicos.
+---
+
+###As presuposições do modelo
+
+- Os fatores específicos (erros) são não correlacionados;
+- Os fatores comuns são não correlacionados (Isso pode não ser
+- levado em consideração em alguns casos);
+- Os fatores comuns e específicos são não correlacionados;
+- As variâncias dos fatores comuns são iguais a 1
+---
+
+```{r, include=F, menssage = F, warning=FALSE}
+pacman::p_load("psych", "corrgram", "fBasics", "skimr", "dplyr", "kableExtra", "readxl")
+```
+###Lendo a base de MentalHealthSurvey...
+```{r, include=T, menssage = F, warning=FALSE}
+MentalHealthSurvey = read_excel("C:/Users/samsung/Desktop/MentalHealthSurvey.xls");
+kable(MentalHealthSurvey, format = "html", caption = "MentalHealthSurvey") %>% kable_styling(
+    bootstrap_options = c("striped", "hover"), font_size = 12, full_width = F, position = "center") %>%
+  scroll_box(width = "100%", height = "300px")
+```
+---
+
+###variáveis usadas:
+
+- gender: Gênero dos participantes ( "M", "F"). -> 1 ou 0
+
+- age: Idade dos participantes (20, 21...) 
+  - Faixa etária de 17-20 -> 1 
+  - Faixa etária de 21-26 -> 2  
+
+- degree_level: Nível de graduação ("GRADUAÇÃO", "POSGRADUAÇÃO")-> 1 ou 0.
+
+- academic_year: Ano acadêmico atual do participante (1 ANO, 2 ANOS, 3 ANOS,...).
+
+- cgpa: Faixa de nota média: 
+ - Bom: CCGA entre 3.0 e 4.0 -> 2
+ - Satisfatório: CCGA entre 2.0 e 3.0 -> 1
+ - Insatisfatório: CCGA abaixo de 2.0 -> 0
+                             
+- residential_status: Status residencial ("SIM", "NÃO") -> 1 ou 0.
+
+- campus_discrimination: Experiência de discriminação no campus ("SIM", "NÃO") -> 1 ou 0 .
+---
+
+- sports_engagement: Engajamento em esportes ("NO", "YES") -> 1 ou 0.
+
+- average_sleep: Duração média de sono (escala de 1 a 3) varia de 2-4h, 4-6h, 6-8h
+
+- study_satisfaction: Satisfação com os estudos (escala de 1 a 5).
+
+- academic_workload: Carga de trabalho acadêmica (escala de 1 a 5).
+
+- academic_pressure: Pressão acadêmica (escala de 1 a 5).
+
+- financial_concerns: Preocupações financeiras (escala de 1 a 5).
+
+- social_relationships: Qualidade dos relacionamentos sociais (escala de 1 a 5).
+
+- depression: Nível de depressão (escala de 1 a 5).
+
+- anxiety: Nível de ansiedade (escala de 1 a 5).
+
+- isolation: Grau de isolamento social (escala de 1 a 5).
+
+- future_insecurity: Insegurança quanto ao futuro (escala de 1 a 5).
+
+---
+###Carregando a base de dados MentalHealthSurvey com o devido tratamento das variáveis que foram escolhidas
+```{r, include=T, menssage = F, warning=FALSE}
+MentalHealthSurvey_tratado = read_excel("C:/Users/samsung/Desktop/MentalHealthSurvey_tratado.xls");
+kable(MentalHealthSurvey_tratado, format = "html", caption = "MentalHealthSurvey - variáveis tratadas") %>% kable_styling(
+    bootstrap_options = c("striped", "hover"), font_size = 12, full_width = F, position = "center") %>%
+  scroll_box(width = "100%", height = "300px")
+```
+---
+###Transformação de variáveis numéricas em fator
+```{r, include=T, menssage = F, warning=FALSE}
+MentalHealthSurvey_tratado <- MentalHealthSurvey_tratado %>%
+  mutate_if(is.numeric, as.factor); MentalHealthSurvey_tratado
+```
+---
+```{r, include=T, menssage = F, warning=FALSE}
+#Análise descritiva
+#attach(MentalHealthSurvey_tratado)
+est_descritiva <- skim(MentalHealthSurvey_tratado); est_descritiva[,1:2]
+```
+---
+```{r, include=T, menssage = F, warning=FALSE}
+#Análise descritiva
+attach(MentalHealthSurvey_tratado)
+est_descritiva <- skim(MentalHealthSurvey_tratado); est_descritiva[,3:7]
+```
+---
+### Transformando variáveis de fator para numérico
+```{r, include=T, menssage = F, warning=FALSE}
+MentalHealthSurvey_tratado <-MentalHealthSurvey_tratado %>%
+  mutate_if(is.factor, as.numeric)
+
+# Padronizando as variáveis
+Z <- scale(MentalHealthSurvey_tratado)
+kable(Z, format = "html", caption = "Matriz Z-Score") %>% kable_styling(
+    bootstrap_options = c("striped", "hover"), font_size = 12, full_width = F, position = "center") %>%
+  scroll_box(width = "100%", height = "300px") # Ajustar o tamanho da visualização
+```
+---
+###Análise de correlações
+```{r, include=T, menssage = F, warning=FALSE}
+# Matriz de correlação
+R <- cor(Z); 
+kable(R, format = "html", caption = "Matriz de correlação") %>% kable_styling(
+    bootstrap_options = c("striped", "hover"), font_size = 12, full_width = F, position = "center") %>%
+  scroll_box(width = "100%", height = "400px") # Ajustar o tamanho da visualização
+```
+---
+###Visualizando a correlação graficamente
+```{r, include=T, menssage = T, warning=FALSE , echo = F,warning = FALSE, out.width="100%", out.height = "100%",fig.width=15, fig.height=10,  fig.align = 'center'}
+corrgram(R, type = "cor", lower.panel = panel.conf, upper.panel = panel.pie)
+```
+---
+###Teste de Esfericidade de Bartlett
+
+#### estamos interessados em testar as hipóteses do teste bilateral de bartllett onde $H_0 : R = I \quad vs \quad H_1 : R \neq I$, onde $R$ e $I$ significa respectivamente a matriz de correlação e a indentidade 
+---                                
+```{r, include=T, menssage = F, warning=FALSE}
+cortest.bartlett(R)
+```
+---
+###Estatística KMO
+
+####O procedimento mais utilizado para avaliar o grau de adequação dos dados é a aplicação da estatística KMO
+```{r, include=T, menssage = F, warning=FALSE}
+kmo <- KMO(Z)
+kmo$MSA
+```
+---
+###Ajuste do modelo fatorial
+```{r, include=T, menssage = F, warning=FALSE}
+ajuste <- princomp(Z);ajuste
+```
+---
+```{r, include=T, menssage = F, warning=FALSE}
+summary(ajuste)
+```
+---
+###Cargas fatoriais e análise de componentes principais
+
+####necessario estimar as cargas fatoriais inerentes a cada fator e a cada variável, foi optado pelo método de componentes principais.
+```{r, include=T, menssage = F, warning=FALSE}
+fit.1 <- principal(Z, nfactors = 7, rotate = "none");#fit.1[, 1:17]
+summary(fit.1)
+```
+---
+###A rotacionalidade dos fatores:
+
+- A rotação ortogonal é utilizada na análise fatorial para melhorar a interpretação dos fatores obtidos na análise (Pedro, 1987);
+
+- Os fatores rotacionados continuam a ser não correlacionados;
+Nas rotações, as comunalidades e especificidades das variáveis
+são preservadas (Pedro, 1987);
+
+- Uma das rotações mais utilizadas em análise fatorial é a varimax,
+a qual busca maximizar as correlações de cada variável com os fatores, melhorando assim a interpretação, uma vez que cada variável estará altamente correlacionada com apenas um único fator (Pedro, 1987).
+
+---
+#### a rotação varimax busca simplificar a estrutura dos componentes, tornando os carregamentos (pesos) das variáveis mais claros e mais distintos entre os fatores;
+```{r, include=T, menssage = F, warning=FALSE}
+fit.2 <- principal(Z, nfactors = 7, rotate = "varimax");fit.2
+summary(fit.2)
+```
+---
+###Construção do Biplot
+```{r, include=T, menssage = F, warning=FALSE}
+biplot(fit.2)
+```
+---
+###Diagrama da Análise Fatorial
+```{r warning=FALSE, include=T, menssage=F}
+fit.3 <- fa(Z, nfactors = 7 , n.obs =87, rotate = "varimax", residuals = TRUE, fm = "pa");fit.3
+summary(fit.3)
+```
+---
+```{r, include=T, menssage = F, warning=FALSE}
+fa.diagram(fit.3)
+```
